@@ -4,7 +4,8 @@ extern crate quote;
 extern crate syn;
 
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
+use syn::spanned::Spanned;
 use syn::{Data, DeriveInput, Fields};
 
 #[proc_macro_derive(HelloMacro)]
@@ -27,10 +28,10 @@ fn serialize_encode(data: &Data) -> proc_macro2::TokenStream {
     match *data {
         Data::Struct(ref data) => match data.fields {
             Fields::Unnamed(ref fields) => {
-                let rec = fields.unnamed.iter().enumerate().map(|(i, _f)| {
+                let rec = fields.unnamed.iter().enumerate().map(|(i, f)| {
                     let self_ = quote!(self);
                     let res = quote!(res);
-                    quote! {
+                    quote_spanned! {f.span() =>
                     #res.append(&mut #self_.#i.serialize());
                     }
                 });
