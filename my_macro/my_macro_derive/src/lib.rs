@@ -5,7 +5,7 @@ extern crate syn;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Data, DeriveInput};
+use syn::{Data, DeriveInput, Fields};
 
 #[proc_macro_derive(HelloMacro)]
 pub fn hello_macro_derive(input: TokenStream) -> TokenStream {
@@ -23,8 +23,24 @@ pub fn my_macro_serialize(input: TokenStream) -> TokenStream {
     res
 }
 
-fn serialize_encode(_data: &Data) -> proc_macro2::TokenStream {
-    quote!(println!("wip");)
+fn serialize_encode(data: &Data) -> proc_macro2::TokenStream {
+    match *data {
+        Data::Struct(ref data) => match data.fields {
+            Fields::Unnamed(ref fields) => {
+                let rec = fields.unnamed.iter().enumerate().map(|(i, _f)| {
+                    let self_ = quote!(self);
+                    let res = quote!(res);
+                    quote! {
+                    #res.append(&mut #self_.#i.serialize());
+                    }
+                });
+
+                quote!( #( #rec )* )
+            }
+            _ => unimplemented!(),
+        },
+        _ => unimplemented!(),
+    }
 }
 
 fn impl_macro_serialize(ast: &DeriveInput) -> TokenStream {
@@ -35,7 +51,7 @@ fn impl_macro_serialize(ast: &DeriveInput) -> TokenStream {
     let gen = quote! {
     impl Serialize for #name {
         fn serialize(&self) -> Vec<u8> {
-        let res = vec![];
+        let mut res = vec![];
     #encoded
         res
         }

@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 my_macro = { path = "../my_macro" }
 my_macro_derive = { path = "../my_macro/my_macro_derive" }
+hexdump = "0.1.0"
